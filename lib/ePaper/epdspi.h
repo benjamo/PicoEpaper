@@ -1,9 +1,12 @@
+/**
+ * EPaper SPI communication
+ * 
+*/
 #pragma once
 
-/* Implement IoInterface for SPI communication */
 #include <vector>
 
-#include <pico/stdlib.h>
+#include "pico/stdlib.h"
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
 #include <stdio.h>
@@ -20,17 +23,16 @@
 
 #define EPD_SPI_PORT spi0
 
-class EpdSpi 
-{
-  public:
+class EpdSpi {
+    public:
+        void cmd(const uint8_t cmd);
+        void data(uint8_t data) ;
+        void dataBuffer(uint8_t data);
+        void data(const uint8_t *data, int len);
+        // Deprecated
+        void reset(uint8_t millis);
+        void init(uint8_t frequency, bool debug);
 
-    void cmd(const uint8_t cmd) ; // Should override if IoInterface is there
-    void data(uint8_t data) ;
-    void dataBuffer(uint8_t data);
-    void data(const uint8_t *data, int len) ;
-    // Deprecated
-    void reset(uint8_t millis) ;
-    void init(uint8_t frequency, bool debug) ;
-  private:
-    bool debug_enabled = true;
+    private:
+        bool debug_enabled = true;
 };

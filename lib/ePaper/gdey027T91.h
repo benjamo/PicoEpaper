@@ -57,17 +57,16 @@ class Gdey027T91 {
         const uint8_t colors_supported = 1;
         const uint8_t partial_supported = 1;
         bool spi_optimized = true;
-        bool _using_partial_mode;
+        bool m_using_partial_mode;
         bool debug_enabled;
-
-        uint8_t _mono_buffer[GDEY027T91_BUFFER_SIZE];
-        uint8_t _buffer1[GDEY027T91_BUFFER_SIZE];
-        uint8_t _buffer2[GDEY027T91_BUFFER_SIZE];
-
         bool color = false;
-        bool _initial = true;
-        bool _debug_buffer = false;
-        bool _mono_mode = false;
+        bool m_initial = true;
+        bool m_debug_buffer = false;
+        bool m_mono_mode = false;
+        
+        uint8_t m_mono_buffer[GDEY027T91_BUFFER_SIZE];
+        uint8_t m_buffer1[GDEY027T91_BUFFER_SIZE];
+        uint8_t m_buffer2[GDEY027T91_BUFFER_SIZE];
         
         // Command & data structs
         static const epd_lut_159 lut_4_grays;

@@ -1,4 +1,3 @@
-/* SPI Master IO class */
 #include "epdspi.h"
 #include <string.h>
 
@@ -6,7 +5,7 @@ void EpdSpi::init(uint8_t frequency=4, bool debug=false) {
     
     debug_enabled = debug;
 
-     /* Enable SPI at 1MHz*/
+    // Enable SPI at given frequency (1 MHz)
     spi_init(EPD_SPI_PORT, frequency * 1000 * 1000);
 
     gpio_set_function(EPD_PIN_DC, GPIO_FUNC_SPI);
@@ -19,7 +18,7 @@ void EpdSpi::init(uint8_t frequency=4, bool debug=false) {
     gpio_init(EPD_PIN_CS);
     gpio_init(EPD_PIN_RST);
 
-    // set also clock and data pin to high level
+    // Set also clock and data pin to high level
     gpio_set_dir(EPD_PIN_DC, GPIO_OUT);
     gpio_set_dir(EPD_PIN_CS, GPIO_OUT);
     gpio_set_dir(EPD_PIN_DIN, GPIO_OUT);
@@ -47,6 +46,7 @@ void EpdSpi::init(uint8_t frequency=4, bool debug=false) {
  * just waiting for the transaction to complete.
  */
 void EpdSpi::cmd(const uint8_t cmd) {
+
     if (debug_enabled) {
         printf("C %x", cmd);
     } 
@@ -68,7 +68,7 @@ void EpdSpi::cmd(const uint8_t cmd) {
 void EpdSpi::data(uint8_t data) {
 
     if (debug_enabled) {
-      printf("D %x", data);
+        printf("D %x", data);
     }
 
     gpio_put(EPD_PIN_DC, 1);
@@ -85,8 +85,8 @@ void EpdSpi::data(uint8_t data) {
  * 
  * @return void
 */
-void EpdSpi::dataBuffer(uint8_t data)
-{
+void EpdSpi::dataBuffer(uint8_t data) {
+
     /*
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));       //Zero out the transaction
@@ -104,14 +104,16 @@ void EpdSpi::dataBuffer(uint8_t data)
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete.
  */
-void EpdSpi::data(const uint8_t *data, int len)
-{
-  if (len==0) return; 
+void EpdSpi::data(const uint8_t *data, int len) {
 
-    if (debug_enabled && false) {
+    if (len == 0) {
+        return;
+    } 
+
+    if (debug_enabled) {
         printf("D");
         for (int i = 0; i < len; i++)  {
-            printf("%x ",data[i]);
+            printf("%x ", data[i]);
         }
     }
     
@@ -119,14 +121,7 @@ void EpdSpi::data(const uint8_t *data, int len)
     gpio_put(EPD_PIN_CS, 0);
     spi_write_blocking(spi0, data, len);
     gpio_put(EPD_PIN_CS, 1);
-    /*
-    esp_err_t ret;
-    spi_transaction_t t;
-                
-    memset(&t, 0, sizeof(t));       //Zero out the transaction
-    t.length=len*8;                 //Len is in bytes, transaction length is in bits.
-    t.tx_buffer=data;               //Data
-*/
+    
 }
 
 /**
@@ -137,10 +132,12 @@ void EpdSpi::data(const uint8_t *data, int len)
  * @return void
 */
 void EpdSpi::reset(uint8_t millis = 20) {
+
     gpio_put(EPD_PIN_RST, 1);
     sleep_ms(millis);
     gpio_put(EPD_PIN_RST, 0);
     sleep_ms(millis);
     gpio_put(EPD_PIN_RST, 1);
     sleep_ms(millis);
+
 }

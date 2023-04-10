@@ -59,9 +59,13 @@ Gdey027T91::Gdey027T91(EpdSpi& dio): IO(dio) {
  * @return void
 */
 void Gdey027T91::initFullUpdate() {
+
     m_wakeUp(0x01);
     m_PowerOn();
-    if (debug_enabled) printf("initFullUpdate() LUT\n");
+    if (debug_enabled) {
+        printf("initFullUpdate() LUT\n");
+    }
+
 }
 
 /**
@@ -78,11 +82,9 @@ void Gdey027T91::init(bool debug) {
         printf("Gdey027T91::init(%d)\n", debug);
     }
 
-    // IO.init(4, debug); // 4MHz frequency
-    IO.init(1, debug); // 1MHz frequency
-    // printf("Free heap:%d\n", (int)xPortGetFreeHeapSize());
+    IO.init(1, debug); // 1MHz frequency or 4Mhz 
 
-    _mono_mode = 1;
+    m_mono_mode = 1;
     fillScreen(EPD_WHITE);
 }
 
@@ -95,19 +97,22 @@ void Gdey027T91::init(bool debug) {
 */
 void Gdey027T91::fillScreen(uint16_t color) {
 
-  if (_mono_mode) {
+  if (m_mono_mode) {
+    
     // 0xFF = 8 pixels black, 0x00 = 8 pix. white
     uint8_t data = (color == EPD_BLACK) ? GDEY027T91_8PIX_BLACK : GDEY027T91_8PIX_WHITE;
-    for (uint16_t x = 0; x < sizeof(_mono_buffer); x++) {
-      _mono_buffer[x] = data;
+    for (uint16_t x = 0; x < sizeof(m_mono_buffer); x++) {
+        m_mono_buffer[x] = data;
     }
+
   } else {
+    
     // 4 Grays mode
     // This is to make faster black & white
     if (color == 255 || color == 0) {
-        for(uint32_t i=0;i<GDEY027T91_BUFFER_SIZE;i++) {
-            _buffer1[i] = (color == 0xFF) ? 0xFF : 0x00;
-            _buffer2[i] = (color == 0xFF) ? 0xFF : 0x00;
+        for(uint32_t i=0; i < GDEY027T91_BUFFER_SIZE; i++) {
+            m_buffer1[i] = (color == 0xFF) ? 0xFF : 0x00;
+            m_buffer2[i] = (color == 0xFF) ? 0xFF : 0x00;
         }
         return;
      }
@@ -123,7 +128,7 @@ void Gdey027T91::fillScreen(uint16_t color) {
   }
 
   if (debug_enabled) {
-    printf("fillScreen(%d) _mono_buffer len:%d\n",color,sizeof(_mono_buffer));
+    printf("fillScreen(%d) _mono_buffer len:%d\n",color,sizeof(m_mono_buffer));
   }
 }
 
@@ -137,55 +142,55 @@ void Gdey027T91::m_wakeUp4Gray() {
     printf("Gdey027T91 4 Gray not working as expected");
 
     IO.reset(10);
-    IO.cmd(0x12);  //SWRESET
+    IO.cmd(0x12); // SWRESET
     m_waitBusy("SWRESET");
 
     IO.cmd(0x74);
     IO.data(0x54);
-    IO.cmd(0x7E);   //Load Temperature and waveform setting.
+    IO.cmd(0x7E); // Load Temperature and waveform setting.
     IO.data(0x3B);
-    IO.cmd(0x01);   // Driver output control      
+    IO.cmd(0x01); // Driver output control      
     IO.data(0x07);
     IO.data(0x01);
     IO.data(0x00);
 
-    IO.cmd(0x11);   //data entry mode       
+    IO.cmd(0x11); // data entry mode       
     IO.data(0x01);
 
-    IO.cmd(0x44);   // set Ram-X address start/end position   
+    IO.cmd(0x44); // set Ram-X address start/end position   
     IO.data(0x00);
-    IO.data(0x15);  // 0x15-->(21+1)*8=176
+    IO.data(0x15); // 0x15-->(21+1)*8=176
 
-    IO.cmd(0x45);   // set Ram-Y address start/end position          
-    IO.data(0x07);  // 0x0107-->(263+1)=264
+    IO.cmd(0x45); // set Ram-Y address start/end position          
+    IO.data(0x07); // 0x0107-->(263+1)=264
     IO.data(0x01);
     IO.data(0x00);
     IO.data(0x00); 
 
-    IO.cmd(0x3C);   // BorderWavefrom
+    IO.cmd(0x3C); // BorderWavefrom
     IO.data(0x00);
 
-    IO.cmd(0x2C);     //VCOM Voltage
-    IO.data(lut_4_grays.data[158]);    //0x1C
+    IO.cmd(0x2C); // VCOM Voltage
+    IO.data(lut_4_grays.data[158]);    // 0x1C
 
-    IO.cmd(0x3F); //EOPQ    
+    IO.cmd(0x3F); // EOPQ    
     IO.data(lut_4_grays.data[153]);
     
-    IO.cmd(0x03); //VGH      
+    IO.cmd(0x03); // VGH      
     IO.data(lut_4_grays.data[154]);
 
     IO.cmd(0x04); //      
-    IO.data(lut_4_grays.data[155]); //VSH1   
-    IO.data(lut_4_grays.data[156]); //VSH2   
-    IO.data(lut_4_grays.data[157]); //VSL
+    IO.data(lut_4_grays.data[155]); // VSH1   
+    IO.data(lut_4_grays.data[156]); // VSH2   
+    IO.data(lut_4_grays.data[157]); // VSL
 
     // LUT init table for 4 gray. Check if it's needed!
-    IO.cmd(lut_4_grays.cmd);     // boost
+    IO.cmd(lut_4_grays.cmd); // boost
     IO.data(lut_4_grays.data, lut_4_grays.databytes);
 
-    IO.cmd(0x4E);   // set RAM x address count to 0;
+    IO.cmd(0x4E); // set RAM x address count to 0;
     IO.data(0x00);
-    IO.cmd(0x4F);   // set RAM y address count to 0X199;    
+    IO.cmd(0x4F); // set RAM y address count to 0X199;    
     IO.data(0x07);
     IO.data(0x01);
     m_waitBusy("4gray");
@@ -206,7 +211,7 @@ void Gdey027T91::m_wakeUp(uint8_t em) {
     m_waitBusy("SWRESET");
     IO.cmd(0x18);
     IO.data(0x80);
-    IO.cmd(0x22);   //Load Temperature and waveform setting.
+    IO.cmd(0x22); // Load Temperature and waveform setting.
     IO.data(0XB1);
     IO.cmd(0x20);
     m_waitBusy("Load temp.");
@@ -238,12 +243,10 @@ void Gdey027T91::DrawBitmap(const unsigned char *Image) {
     uint16_t x = 0;
 
     IO.cmd(0x24);
-    for (uint16_t j = 0; j < Height; j++)
-    {
-        for (uint16_t i = 0; i < Width; i++)
-        {
+    for (uint16_t j = 0; j < Height; j++) {
+        for (uint16_t i = 0; i < Width; i++) {
             Addr = i + j * Width;
-            _mono_buffer[x] = Image[Addr];
+            m_mono_buffer[x] = Image[Addr];
             x++;
         }
     }
@@ -257,24 +260,23 @@ void Gdey027T91::DrawBitmap(const unsigned char *Image) {
 */
 void Gdey027T91::update() {
 
-    // uint64_t startTime = esp_timer_get_time();
     uint8_t xLineBytes = GDEY027T91_WIDTH / 8;
     uint8_t x1buf[xLineBytes];
 
-    if (_mono_mode) {
+    if (m_mono_mode) {
         m_wakeUp(0x01);
         // _PowerOn();
-        IO.cmd(0x24);        // send framebuffer
+        IO.cmd(0x24); // send framebuffer
         
         if (spi_optimized) {
-            // v2 SPI optimizing. Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
-            printf("SPI optimized buffer_len:%d\n", sizeof(_mono_buffer));
+            // v2 SPI optimizing.
+            printf("SPI optimized buffer_len:%d\n", sizeof(m_mono_buffer));
             uint16_t countPix = 0;
             
             for (uint16_t y = GDEY027T91_HEIGHT; y > 0; y--) {
                 for (uint16_t x = 0; x < xLineBytes; x++) {
                     uint16_t idx = y * xLineBytes + x;  
-                    x1buf[x] = (idx < sizeof(_mono_buffer)) ? ~ _mono_buffer[idx] : 0xFF;
+                    x1buf[x] = (idx < sizeof(m_mono_buffer)) ? ~ m_mono_buffer[idx] : 0xFF;
                     countPix++;
                 }
                 // Flush the X line buffer to SPI
@@ -289,7 +291,7 @@ void Gdey027T91::update() {
             for (uint16_t y = GDEY027T91_HEIGHT; y > 0; y--) {
                 for (uint16_t x = 0; x < GDEY027T91_WIDTH / 8; x++) {
                     uint16_t idx = y * (GDEY027T91_WIDTH / 8) + x;
-                    uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0xFF;
+                    uint8_t data = (idx < sizeof(m_mono_buffer)) ? m_mono_buffer[idx] : 0xFF;
                     IO.data(~data);
                 }
             }
@@ -299,13 +301,13 @@ void Gdey027T91::update() {
 
         // 4 gray mode!
         m_wakeUp4Gray();
-        printf("buffer size: %d", sizeof(_buffer1));
+        printf("buffer size: %d", sizeof(m_buffer1));
 
         IO.cmd(0x24); // RAM1
         for (uint16_t y = GDEY027T91_HEIGHT; y > 0; y--) {
             for (uint16_t x = 0; x < xLineBytes; x++) {
                 uint16_t idx = y * xLineBytes + x;  
-                x1buf[x] = (idx < sizeof(_buffer1)) ? ~ _buffer1[idx] : 0xFF;
+                x1buf[x] = (idx < sizeof(m_buffer1)) ? ~ m_buffer1[idx] : 0xFF;
             }
             // Flush the X line buffer to SPI
             IO.data(x1buf, sizeof(x1buf));
@@ -315,23 +317,18 @@ void Gdey027T91::update() {
         for (uint16_t y = GDEY027T91_HEIGHT; y > 0; y--) {
             for (uint16_t x = 0; x < xLineBytes; x++) {
                 uint16_t idx = y * xLineBytes + x;  
-                x1buf[x] = (idx < sizeof(_buffer2)) ? ~ _buffer2[idx] : 0xFF;
+                x1buf[x] = (idx < sizeof(m_buffer2)) ? ~ m_buffer2[idx] : 0xFF;
             }
             // Flush the X line buffer to SPI
             IO.data(x1buf, sizeof(x1buf));
         }
     }
 
-    // uint64_t endTime = esp_timer_get_time();
     IO.cmd(0x22);
     IO.data(0xc4);
     // NOTE: Using F7 as in the GD example the display turns black into gray at the end. With C4 is fine
     IO.cmd(0x20);
     m_waitBusy("_Update_Full", 1200);
-    // uint64_t powerOnTime = esp_timer_get_time();
-
-    //printf("\n\nSTATS (ms)\n%llu _wakeUp settings+send Buffer\n%llu _powerOn\n%llu total time in millis\n",
-    // (endTime-startTime)/1000, (powerOnTime-endTime)/1000, (powerOnTime-startTime)/1000);
 
     m_sleep();
 }
@@ -354,22 +351,22 @@ void Gdey027T91::m_setRamDataEntryMode(uint8_t em) {
     switch (em) {
 
         case 0x00: // x decrease, y decrease
-            m_SetRamArea(xPixelsPar / 8, 0x00, yPixelsPar % 256, yPixelsPar / 256, 0x00, 0x00);  // X-source area,Y-gate area
+            m_SetRamArea(xPixelsPar / 8, 0x00, yPixelsPar % 256, yPixelsPar / 256, 0x00, 0x00);  // X-source area, Y-gate area
             m_SetRamPointer(xPixelsPar / 8, yPixelsPar % 256, yPixelsPar / 256);
             break;
 
         case 0x01: // x increase, y decrease : as in demo code
-            m_SetRamArea(0x00, xPixelsPar / 8, yPixelsPar % 256, yPixelsPar / 256, 0x00, 0x00);  // X-source area,Y-gate area
+            m_SetRamArea(0x00, xPixelsPar / 8, yPixelsPar % 256, yPixelsPar / 256, 0x00, 0x00);  // X-source area, Y-gate area
             m_SetRamPointer(0x00, yPixelsPar % 256, yPixelsPar / 256);
             break;
 
         case 0x02: // x decrease, y increase
-            m_SetRamArea(xPixelsPar / 8, 0x00, 0x00, 0x00, yPixelsPar % 256, yPixelsPar / 256);  // X-source area,Y-gate area
+            m_SetRamArea(xPixelsPar / 8, 0x00, 0x00, 0x00, yPixelsPar % 256, yPixelsPar / 256);  // X-source area, Y-gate area
             m_SetRamPointer(xPixelsPar / 8, 0x00, 0x00);
             break;
 
         case 0x03: // x increase, y increase : normal mode
-            m_SetRamArea(0x00, xPixelsPar / 8, 0x00, 0x00, yPixelsPar % 256, yPixelsPar / 256);  // X-source area,Y-gate area
+            m_SetRamArea(0x00, xPixelsPar / 8, 0x00, 0x00, yPixelsPar % 256, yPixelsPar / 256);  // X-source area, Y-gate area
             m_SetRamPointer(0x00, 0x00, 0x00);
             break;
     }
@@ -441,8 +438,8 @@ void Gdey027T91::m_PowerOn() {
 */
 void Gdey027T91::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool using_rotation) {
 
-    if (!_using_partial_mode) {
-        _using_partial_mode = true;
+    if (!m_using_partial_mode) {
+        m_using_partial_mode = true;
         m_wakeUp(0x03);
         m_PowerOn();
         // Fix gray partial update
@@ -466,19 +463,19 @@ void Gdey027T91::updateWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bo
     uint16_t xs_d8 = x / 8;
     uint16_t xe_d8 = xe / 8;
 
-    IO.cmd(0x12); //SWRESET
+    IO.cmd(0x12); // SWRESET
     m_waitBusy("SWRESET");
     m_setRamDataEntryMode(0x03);
-    m_SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area,Y-gate area
+    m_SetRamArea(xs_d8, xe_d8, y % 256, y / 256, ye % 256, ye / 256); // X-source area, Y-gate area
     m_SetRamPointer(xs_d8, y % 256, y / 256); // set ram
-    //_waitBusy("partialUpdate1", 100); // needed ?
+    // _waitBusy("partialUpdate1", 100); // needed ?
 
     IO.cmd(0x24);
     for (int16_t y1 = y; y1 <= ye; y1++) {
         for (int16_t x1 = xs_d8; x1 <= xe_d8; x1++) {
-        uint16_t idx = y1 * (GDEY027T91_WIDTH / 8) + x1;
-        uint8_t data = (idx < sizeof(_mono_buffer)) ? _mono_buffer[idx] : 0x00;
-        IO.data(~data);
+            uint16_t idx = y1 * (GDEY027T91_WIDTH / 8) + x1;
+            uint8_t data = (idx < sizeof(m_mono_buffer)) ? m_mono_buffer[idx] : 0x00;
+            IO.data(~data);
         }
     }
 
@@ -505,13 +502,13 @@ void Gdey027T91::m_waitBusy(const char* message, uint16_t busy_time) {
     // int64_t time_since_boot = esp_timer_get_time();
     // On high is busy
     if (gpio_get(EPD_PIN_BUSY) == 1) {
-            while (1) {
-                if (gpio_get(EPD_PIN_BUSY) == 0) {
-                    break;
-                }
-                // vTaskDelay(1);
-                sleep_ms(1);
+        while (1) {
+            if (gpio_get(EPD_PIN_BUSY) == 0) {
+                break;
             }
+            // vTaskDelay(1);
+            sleep_ms(1);
+        }
     }
     /*
     if (esp_timer_get_time()-time_since_boot>7000000)
@@ -671,5 +668,5 @@ void Gdey027T91::drawPixel(int16_t x, int16_t y, uint16_t color) {
  * @return void
 */
 void Gdey027T91::setMonoMode(bool mode) {
-    _mono_mode = mode;
+    m_mono_mode = mode;
 }
