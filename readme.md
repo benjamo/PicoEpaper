@@ -13,4 +13,5 @@ Raspberry pi pico - gdey027t91
     GND (pin 38)  - GND
     3V3 (pin 36)  - VCC
 
-Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
+Original repository https://github.com/martinberlin/CalEPD
+from the author Martin Fasani.
