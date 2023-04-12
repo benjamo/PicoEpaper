@@ -12,3 +12,5 @@ Raspberry pi pico - gdey027t91
     GP3 (pin  5)  - DIN
     GND (pin 38)  - GND
     3V3 (pin 36)  - VCC
+
+Check: https://github.com/martinberlin/cale-idf/wiki/About-SPI-optimization
